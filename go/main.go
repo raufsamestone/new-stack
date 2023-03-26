@@ -24,6 +24,7 @@ type Product struct {
 
 func main() {
 	// Load in the `.env` file
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Print("failed to load env", err)
@@ -36,17 +37,49 @@ func main() {
 	}
 
 	// Build router & define routes
+
 	router := gin.Default()
 	router.Use(cors.Default()) // Add the cors middleware
+	// router.NoRoute(ReverseProxy) // Reverse proxy method for mixing NextAuth
 	router.GET("/products", GetProducts)
 	router.GET("/products/:productId", GetSingleProduct)
 	router.POST("/products", CreateProduct)
 	router.PUT("/products/:productId", UpdateProduct)
 	router.DELETE("/products/:productId", DeleteProduct)
+	// v1api := router.Group("/v1/api")
+	// v1api.Use(UserAuth)
 
 	// Run the router
-	router.Run()
+	router.Run() // custom port usage  -> router.Run(":8080")
 }
+
+// send request to the NextAuth backend
+// to check if user is authenticated
+// func UserAuth(c *gin.Context) {
+// 	req, _ := http.NewRequest("GET", "http://localhost:3000/", nil)
+// 	req.Header = c.Request.Header.Clone()
+
+// 	client := &http.Client{}
+// 	resp, err := client.Do(req)
+// 	if err != nil || resp.StatusCode != http.StatusOK {
+// 		c.AbortWithStatus(http.StatusUnauthorized)
+// 		return
+// 	}
+// 	c.Next()
+// }
+
+// func ReverseProxy(c *gin.Context) {
+// 	remote, _ := url.Parse("http://localhost:3000")
+// 	proxy := httputil.NewSingleHostReverseProxy(remote)
+// 	proxy.Director = func(req *http.Request) {
+// 		req.Header = c.Request.Header
+// 		req.Host = remote.Host
+// 		req.URL = c.Request.URL
+// 		req.URL.Scheme = remote.Scheme
+// 		req.URL.Host = remote.Host
+// 	}
+// 	proxy.ServeHTTP(c.Writer, c.Request)
+// }
 
 func GetProducts(c *gin.Context) {
 	query := "SELECT * FROM products"
